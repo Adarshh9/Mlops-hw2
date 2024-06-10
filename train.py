@@ -10,6 +10,7 @@ from sklearn.metrics import mean_squared_error ,r2_score
 import mlflow
 import mlflow.sklearn
 from mlflow.models import infer_signature
+import dagshub
 
 import logging
 
@@ -26,6 +27,8 @@ def run(data_path: str ,max_depth: int ,n_estimators: int):
     X_train ,y_train = load_pickle(filepath=os.path.join(data_path ,'train.pickle'))
     X_val ,y_val = load_pickle(filepath=os.path.join(data_path ,'val.pickle'))
         
+    dagshub.init(repo_owner='akesherwani900', repo_name='Mlops-hw2', mlflow=True)
+    
     with mlflow.start_run():
         model = RandomForestRegressor(n_estimators=n_estimators, max_depth=max_depth, random_state=0)
         model.fit(X_train ,y_train)
@@ -42,20 +45,9 @@ def run(data_path: str ,max_depth: int ,n_estimators: int):
         mlflow.log_metric('rmse' ,rmse)
         mlflow.log_metric('r2_score' ,r2)
         
-        # predictions = model.predict(X_train)
-        # signature = infer_signature(X_train, predictions)
-        
-        ## For Remote server only(DAGShub)
-
-        remote_server_uri="https://dagshub.com/akesherwani900/homework2.mlflow"
-        mlflow.set_tracking_uri(remote_server_uri)
-        
-        tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
+        mlflow.sklearn.log_model(model, "model", registered_model_name="RandomForestHW2Model")
         
         
-        
-        
-    
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     
